@@ -3,12 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "sideEffects": ["*.css"],
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./ydoc": "./src/ydoc.ts",
     "./schema": "./src/schema.ts",
-    "./markdown": "./src/markdown.ts"
+    "./markdown": "./src/markdown.ts",
+    "./markdown-blocks": "./src/markdown-blocks.ts",
+    "./collab": "./src/collab.ts"
   },
   "scripts": {
     "lint": "eslint src",
@@ -18,11 +22,35 @@
   "dependencies": {
     "@orbit/core": "workspace:*",
     "@orbit/shared": "workspace:*",
-    "yjs": "^13.6.32"
+    "yjs": "^13.6.32",
+    "@tiptap/core": "^3.31.3",
+    "@tiptap/react": "^3.31.3",
+    "@tiptap/pm": "^3.31.3",
+    "@tiptap/starter-kit": "^3.31.3",
+    "@tiptap/extensions": "^3.31.3",
+    "@tiptap/extension-collaboration": "^3.31.3",
+    "@tiptap/extension-collaboration-caret": "^3.31.3",
+    "@tiptap/extension-image": "^3.31.3",
+    "@tiptap/suggestion": "^3.31.3",
+    "@tiptap/extension-drag-handle-react": "^3.31.3",
+    "@tiptap/extension-drag-handle": "^3.31.3",
+    "@tiptap/extension-node-range": "^3.31.3",
+    "@hocuspocus/provider": "^4.7.0",
+    "y-indexeddb": "^9.0.12",
+    "y-protocols": "^1.0.6",
+    "@tiptap/y-tiptap": "^3.0.9"
   },
   "devDependencies": {
     "@orbit/config": "workspace:*",
     "@types/node": "^24.0.0",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.2.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }

@@ -1,0 +1,12 @@
+{
+  "extends": "@orbit/config/tsconfig.react.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "plugins": [{ "name": "next" }],
+    "paths": { "@/*": ["./src/*"] },
+    "allowJs": false,
+    "incremental": true
+  },
+  "include": ["next-env.d.ts", "app", "src", ".next/types/**/*.ts", "e2e", "playwright.config.ts"],
+  "exclude": ["node_modules", ".next", "out"]
+}

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@orbit/web", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "collab",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@orbit/collaboration-server", "dev"],
+      "port": 4001
+    }
+  ]
+}

@@ -37,6 +37,8 @@ export const taskPatchSchema = z
     reminders: z.array(reminderSchema).max(20).optional(),
     recurrence: recurrenceSchema.nullable().optional(),
     assigneeId: uuid.nullable().optional(),
+    /** Only used to undo a recurring completion precisely. */
+    occurrenceCount: z.number().int().min(0).max(100000).optional(),
   })
   .strict();
 export type TaskPatch = z.infer<typeof taskPatchSchema>;
@@ -166,7 +168,7 @@ export const mutatorArgs = {
     attachmentId: uuid.nullable().default(null),
     mentions: z.array(uuid).max(50).default([]),
   }),
-  'message.edit': z.object({ id: uuid, body: z.string().max(20000), mentions: z.array(uuid).max(50).default([]) }),
+  'message.edit': z.object({ id: uuid, body: z.string().max(20000), mentions: z.array(uuid).max(50).default([]), attachmentId: uuid.optional() }),
   'message.delete': z.object({ id: uuid }),
   'reaction.toggle': z.object({ id: uuid, messageId: uuid, emoji: z.string().min(1).max(16), on: z.boolean() }),
 

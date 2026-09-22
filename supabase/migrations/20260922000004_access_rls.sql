@@ -514,7 +514,8 @@ create policy attachments_insert on public.attachments for insert to authenticat
     and (
       (task_id is not null and task_id in (select app.accessible_task_ids()))
       or (task_id is null and list_id is not null and list_id in (select app.editable_list_ids()))
-      or (task_id is null and list_id is null and message_id is not null)
+      or (task_id is null and list_id is null and message_id in (
+            select m.id from public.task_messages m where m.author_id = (select auth.uid())))
     )
   );
 create policy attachments_update on public.attachments for update to authenticated

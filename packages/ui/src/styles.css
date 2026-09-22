@@ -1,0 +1,238 @@
+/*
+ * Orbit design tokens. Semantic CSS variables switch with [data-theme]; Tailwind utilities map to
+ * them via @theme inline (e.g. bg-surface, text-fg-muted, border-border, ring-focus).
+ * Palette: warm "paper" neutrals, an iris accent, mint for completion.
+ */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+  color-scheme: light;
+  --bg: oklch(0.985 0.004 85);
+  --bg-subtle: oklch(0.965 0.006 85);
+  --bg-hover: oklch(0.945 0.007 85);
+  --bg-active: oklch(0.925 0.009 85);
+  --surface: oklch(1 0 0);
+  --surface-raised: oklch(1 0 0);
+  --surface-sunken: oklch(0.97 0.005 85);
+  --fg: oklch(0.24 0.012 75);
+  --fg-muted: oklch(0.47 0.012 75);
+  --fg-subtle: oklch(0.6 0.01 75);
+  --fg-inverted: oklch(0.99 0.002 85);
+  --border: oklch(0.91 0.007 85);
+  --border-strong: oklch(0.84 0.009 85);
+  --accent: oklch(0.55 0.21 277);
+  --accent-hover: oklch(0.5 0.21 277);
+  --accent-fg: oklch(0.99 0.01 277);
+  --accent-subtle: oklch(0.95 0.035 277);
+  --accent-subtle-fg: oklch(0.45 0.18 277);
+  --success: oklch(0.64 0.14 158);
+  --success-subtle: oklch(0.95 0.04 158);
+  --warning: oklch(0.72 0.15 70);
+  --warning-subtle: oklch(0.96 0.05 80);
+  --danger: oklch(0.58 0.2 25);
+  --danger-subtle: oklch(0.96 0.03 25);
+  --focus: oklch(0.6 0.2 277 / 0.55);
+  --overlay: oklch(0.2 0.01 75 / 0.36);
+  --shadow-color: 30 20 10;
+
+  /* Label colors: background / foreground pairs (WCAG AA on each other). */
+  --label-slate-bg: oklch(0.94 0.01 250);
+  --label-slate-fg: oklch(0.42 0.03 250);
+  --label-red-bg: oklch(0.94 0.04 25);
+  --label-red-fg: oklch(0.47 0.17 25);
+  --label-orange-bg: oklch(0.95 0.05 55);
+  --label-orange-fg: oklch(0.5 0.14 50);
+  --label-amber-bg: oklch(0.95 0.06 85);
+  --label-amber-fg: oklch(0.48 0.11 75);
+  --label-lime-bg: oklch(0.95 0.07 125);
+  --label-lime-fg: oklch(0.45 0.12 130);
+  --label-green-bg: oklch(0.94 0.05 155);
+  --label-green-fg: oklch(0.45 0.12 155);
+  --label-teal-bg: oklch(0.94 0.04 190);
+  --label-teal-fg: oklch(0.44 0.09 195);
+  --label-sky-bg: oklch(0.94 0.04 230);
+  --label-sky-fg: oklch(0.46 0.12 235);
+  --label-blue-bg: oklch(0.93 0.04 260);
+  --label-blue-fg: oklch(0.45 0.17 260);
+  --label-indigo-bg: oklch(0.93 0.045 280);
+  --label-indigo-fg: oklch(0.45 0.18 280);
+  --label-violet-bg: oklch(0.93 0.05 305);
+  --label-violet-fg: oklch(0.46 0.18 305);
+  --label-pink-bg: oklch(0.94 0.045 350);
+  --label-pink-fg: oklch(0.49 0.17 355);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: oklch(0.19 0.006 75);
+  --bg-subtle: oklch(0.215 0.007 75);
+  --bg-hover: oklch(0.25 0.008 75);
+  --bg-active: oklch(0.285 0.009 75);
+  --surface: oklch(0.225 0.007 75);
+  --surface-raised: oklch(0.255 0.008 75);
+  --surface-sunken: oklch(0.2 0.006 75);
+  --fg: oklch(0.94 0.005 85);
+  --fg-muted: oklch(0.75 0.008 85);
+  --fg-subtle: oklch(0.6 0.008 85);
+  --fg-inverted: oklch(0.2 0.006 75);
+  --border: oklch(0.3 0.008 75);
+  --border-strong: oklch(0.37 0.01 75);
+  --accent: oklch(0.68 0.17 277);
+  --accent-hover: oklch(0.73 0.16 277);
+  --accent-fg: oklch(0.18 0.03 277);
+  --accent-subtle: oklch(0.3 0.07 277);
+  --accent-subtle-fg: oklch(0.85 0.09 277);
+  --success: oklch(0.72 0.14 158);
+  --success-subtle: oklch(0.3 0.05 158);
+  --warning: oklch(0.8 0.14 80);
+  --warning-subtle: oklch(0.32 0.05 80);
+  --danger: oklch(0.7 0.17 25);
+  --danger-subtle: oklch(0.3 0.06 25);
+  --focus: oklch(0.72 0.16 277 / 0.6);
+  --overlay: oklch(0 0 0 / 0.55);
+  --shadow-color: 0 0 0;
+
+  --label-slate-bg: oklch(0.32 0.015 250);
+  --label-slate-fg: oklch(0.86 0.02 250);
+  --label-red-bg: oklch(0.32 0.07 25);
+  --label-red-fg: oklch(0.86 0.08 25);
+  --label-orange-bg: oklch(0.33 0.07 55);
+  --label-orange-fg: oklch(0.87 0.08 60);
+  --label-amber-bg: oklch(0.34 0.06 85);
+  --label-amber-fg: oklch(0.88 0.09 90);
+  --label-lime-bg: oklch(0.33 0.07 130);
+  --label-lime-fg: oklch(0.88 0.1 128);
+  --label-green-bg: oklch(0.32 0.06 155);
+  --label-green-fg: oklch(0.86 0.09 155);
+  --label-teal-bg: oklch(0.32 0.05 195);
+  --label-teal-fg: oklch(0.86 0.07 190);
+  --label-sky-bg: oklch(0.32 0.06 235);
+  --label-sky-fg: oklch(0.86 0.07 230);
+  --label-blue-bg: oklch(0.32 0.08 260);
+  --label-blue-fg: oklch(0.86 0.08 260);
+  --label-indigo-bg: oklch(0.32 0.08 280);
+  --label-indigo-fg: oklch(0.86 0.08 280);
+  --label-violet-bg: oklch(0.33 0.09 305);
+  --label-violet-fg: oklch(0.87 0.08 305);
+  --label-pink-bg: oklch(0.33 0.08 350);
+  --label-pink-fg: oklch(0.87 0.08 350);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-bg-hover: var(--bg-hover);
+  --color-bg-active: var(--bg-active);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-inverted: var(--fg-inverted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-subtle-fg: var(--accent-subtle-fg);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-focus: var(--focus);
+  --color-overlay: var(--overlay);
+
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --shadow-xs: 0 1px 2px rgb(var(--shadow-color) / 0.06);
+  --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.06), 0 2px 6px rgb(var(--shadow-color) / 0.05);
+  --shadow-md: 0 2px 6px rgb(var(--shadow-color) / 0.07), 0 8px 24px rgb(var(--shadow-color) / 0.08);
+  --shadow-lg: 0 8px 24px rgb(var(--shadow-color) / 0.12), 0 24px 64px rgb(var(--shadow-color) / 0.14);
+
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-check-pop: check-pop 380ms var(--ease-spring);
+  --animate-fade-in: fade-in 160ms var(--ease-soft);
+  --animate-slide-up: slide-up 220ms var(--ease-soft);
+  --animate-shimmer: shimmer 1.6s linear infinite;
+}
+
+@keyframes check-pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--accent-subtle);
+  }
+  /* Respect Reduced Motion (system or in-app setting). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 1ms !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  [data-motion='reduce'] *, [data-motion='reduce'] *::before, [data-motion='reduce'] *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@utility skeleton {
+  background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 37%, var(--bg-hover) 63%);
+  background-size: 400% 100%;
+  animation: var(--animate-shimmer);
+  border-radius: var(--radius-sm);
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility safe-top {
+  padding-top: env(safe-area-inset-top);
+}

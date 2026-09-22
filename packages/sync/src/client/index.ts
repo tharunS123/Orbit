@@ -11,3 +11,5 @@ export {
   type SyncMeta,
 } from './persistence';
 export { SyncClient, type SyncClientOptions, type SyncIssue, type SyncState, type SyncStatus, type SyncTransport } from './sync-client';
+export * from './selectors';
+export { Actions, type ActionContext, type ActionResult, type CreateTaskInput } from './actions';

@@ -225,6 +225,7 @@ export const serverMutators: Impl = {
     if (p.reminders !== undefined) set.reminders = j(ctx.tx, p.reminders);
     if (p.recurrence !== undefined) set.recurrence = j(ctx.tx, normalizeRule(p.recurrence, dueDate ?? null));
     if (p.assigneeId !== undefined) set.assignee_id = p.assigneeId;
+    if (p.occurrenceCount !== undefined) set.occurrence_count = p.occurrenceCount;
     if (!Object.keys(set).length) return;
     await ctx.tx`update tasks set ${ctx.tx(set as never)} where id = ${a.id}`;
 
@@ -622,6 +623,15 @@ export const serverMutators: Impl = {
     }
   },
   async 'message.edit'(ctx, a) {
+    if (a.attachmentId) {
+      // Link an uploaded voice note; the attachment must belong to this message.
+      const res = await ctx.tx`update task_messages m set attachment_id = ${a.attachmentId}
+                               where m.id = ${a.id} and m.deleted_at is null
+                                 and exists (select 1 from attachments a where a.id = ${a.attachmentId} and a.message_id = m.id)
+                               returning m.id`;
+      if (!res.length) throw new AppError('not_found', 'Message or attachment not found.');
+      return;
+    }
     const res = await ctx.tx`update task_messages set body = ${a.body}, mentions = ${a.mentions}::uuid[], edited_at = now()
                              where id = ${a.id} and deleted_at is null returning id`;
     if (!res.length) throw new AppError('not_found', 'Message not found.');

@@ -5,3 +5,4 @@ export * from './parse';
 export * from './plans';
 export * from './permissions';
 export * from './markdown';
+export * from './templates';

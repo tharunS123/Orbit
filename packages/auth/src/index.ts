@@ -1,5 +1,5 @@
 import { createHash, createCipheriv, createDecipheriv, randomBytes, timingSafeEqual, createHmac } from 'node:crypto';
-import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
+import { createRemoteJWKSet, decodeProtectedHeader, jwtVerify, type JWTPayload } from 'jose';
 import { AppError, randomToken } from '@orbit/shared';
 
 /**
@@ -27,14 +27,21 @@ export interface VerifierOptions {
 export function createTokenVerifier(opts: VerifierOptions) {
   const issuer = `${opts.supabaseUrl.replace(/\/$/, '')}/auth/v1`;
   const secret = opts.jwtSecret ? new TextEncoder().encode(opts.jwtSecret) : null;
-  const jwks = secret ? null : createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks.json`));
+  // Projects may sign with asymmetric keys (JWKS) or a legacy HS256 secret; pick by header.
+  const jwks = createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks.json`), { cooldownDuration: 60_000 });
 
   return async function verify(token: string): Promise<AuthenticatedUser> {
     let payload: JWTPayload & { email?: string; session_id?: string; role?: string; amr?: { method: string; timestamp: number }[] };
     try {
-      const result = secret
-        ? await jwtVerify(token, secret, { issuer, audience: opts.audience ?? 'authenticated' })
-        : await jwtVerify(token, jwks!, { issuer, audience: opts.audience ?? 'authenticated' });
+      const alg = (decodeProtectedHeader(token).alg ?? '').toUpperCase();
+      const verifyOpts = { issuer, audience: opts.audience ?? 'authenticated' };
+      const result = alg.startsWith('HS')
+        ? secret
+          ? await jwtVerify(token, secret, { ...verifyOpts, algorithms: ['HS256'] })
+          : (() => {
+              throw new Error('HS256 token but no secret configured');
+            })()
+        : await jwtVerify(token, jwks, { ...verifyOpts, algorithms: ['ES256', 'RS256', 'EdDSA'] });
       payload = result.payload as typeof payload;
     } catch {
       throw new AppError('unauthorized', 'Your session has expired. Please sign in again.');

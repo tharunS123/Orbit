@@ -172,6 +172,7 @@ export const clientMutators: Appliers = {
     if (p.title !== undefined) next.title = p.title;
     if (p.assigneeId !== undefined) next.assigneeId = p.assigneeId;
     if (p.reminders !== undefined) next.reminders = p.reminders;
+    if (p.occurrenceCount !== undefined) next.occurrenceCount = p.occurrenceCount;
     if (p.dueDate !== undefined || p.dueTime !== undefined || p.dueTz !== undefined) {
       const dueDate = p.dueDate !== undefined ? p.dueDate : task.dueDate;
       const dueTime = dueDate ? (p.dueTime !== undefined ? p.dueTime : task.dueTime) : null;
@@ -467,7 +468,10 @@ export const clientMutators: Appliers = {
     });
   },
   'message.edit'(tx, a) {
-    if (tx.get('taskMessages', a.id)) tx.patch('taskMessages', a.id, { body: a.body, mentions: a.mentions, editedAt: tx.now });
+    const msg = tx.get('taskMessages', a.id);
+    if (!msg) return;
+    if (a.attachmentId) tx.patch('taskMessages', a.id, { attachmentId: a.attachmentId });
+    else tx.patch('taskMessages', a.id, { body: a.body, mentions: a.mentions, editedAt: tx.now });
   },
   'message.delete'(tx, a) {
     if (tx.get('taskMessages', a.id)) tx.patch('taskMessages', a.id, { deletedAt: tx.now, body: '' });
