@@ -1,0 +1,37 @@
+{
+  "name": "orbit",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.5.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@orbit/web --filter=@orbit/collaboration-server --filter=@orbit/worker --filter=@orbit/mcp-server",
+    "dev:web": "turbo run dev --filter=@orbit/web",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "pnpm --filter @orbit/web test:e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:migrate": "supabase migration up",
+    "db:seed": "pnpm --filter @orbit/database seed",
+    "db:types": "pnpm --filter @orbit/database gen:types",
+    "setup": "node scripts/setup.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "prettier": "^3.9.8",
+    "supabase": "2.117.0",
+    "turbo": "^2.11.2",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.70.1"
+  }
+}
