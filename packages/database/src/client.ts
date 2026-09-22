@@ -58,11 +58,22 @@ export interface UserContext {
   claims?: Record<string, unknown>;
 }
 
+export interface TxOptions {
+  isolation?: 'read committed' | 'repeatable read' | 'serializable';
+  readOnly?: boolean;
+}
+
+function beginMode(opts: TxOptions): string {
+  return [opts.isolation ? `isolation level ${opts.isolation}` : '', opts.readOnly ? 'read only' : 'read write']
+    .filter(Boolean)
+    .join(' ');
+}
+
 /** Run `fn` in a transaction as the given user with RLS enforced. */
-export async function asUser<T>(sql: Sql, ctx: UserContext, fn: (tx: Tx) => Promise<T>): Promise<T> {
+export async function asUser<T>(sql: Sql, ctx: UserContext, fn: (tx: Tx) => Promise<T>, opts: TxOptions = {}): Promise<T> {
   const claims = JSON.stringify({ ...ctx.claims, sub: ctx.userId, role: 'authenticated' });
   try {
-    return (await sql.begin(async (tx) => {
+    return (await sql.begin(beginMode(opts), async (tx) => {
       await tx`select set_config('request.jwt.claims', ${claims}, true), set_config('request.jwt.claim.sub', ${ctx.userId}, true)`;
       await tx.unsafe('set local role authenticated');
       return fn(tx);

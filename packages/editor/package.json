@@ -1,0 +1,28 @@
+{
+  "name": "@orbit/editor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": ["*.css"],
+  "exports": {
+    ".": "./src/index.ts",
+    "./ydoc": "./src/ydoc.ts",
+    "./schema": "./src/schema.ts",
+    "./markdown": "./src/markdown.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@orbit/core": "workspace:*",
+    "@orbit/shared": "workspace:*",
+    "yjs": "^13.6.32"
+  },
+  "devDependencies": {
+    "@orbit/config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "vitest": "^5.0.1"
+  }
+}

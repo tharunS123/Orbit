@@ -1,0 +1,40 @@
+{
+  "name": "@orbit/sync",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client/index.ts",
+    "./server": "./src/server/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@orbit/core": "workspace:*",
+    "@orbit/shared": "workspace:*",
+    "idb": "^8.0.3",
+    "zod": "^4.6.5",
+    "@orbit/editor": "workspace:*",
+    "yjs": "^13.6.32"
+  },
+  "peerDependencies": {
+    "@orbit/database": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@orbit/database": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@orbit/config": "workspace:*",
+    "@orbit/database": "workspace:*",
+    "@types/node": "^24.0.0",
+    "fake-indexeddb": "^6.2.5",
+    "vitest": "^5.0.1"
+  }
+}

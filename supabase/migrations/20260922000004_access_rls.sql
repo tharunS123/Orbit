@@ -38,11 +38,11 @@ language sql stable security definer set search_path = '' as $$
   select exists (select 1 from public.workspaces where id = ws and owner_id = auth.uid() and deleted_at is null)
 $$;
 
--- (list_id, level) for every list the current user can see. level: 3 owner, 2 editor, 1 viewer.
-create or replace function app.list_access_levels() returns table (list_id uuid, level int)
+-- (list_id, level) for every list user `u` can see. level: 3 owner, 2 editor, 1 viewer.
+create or replace function app.list_access_levels_for(u uuid) returns table (list_id uuid, level int)
 language sql stable security definer set search_path = '' as $$
   with recursive
-  me as (select auth.uid() as uid),
+  me as (select u as uid),
   memberships as (
     select wm.workspace_id, wm.role from public.workspace_members wm, me
      where wm.user_id = me.uid and wm.deleted_at is null
@@ -75,6 +75,39 @@ language sql stable security definer set search_path = '' as $$
     select id, level from direct where level > 0
   ) all_levels
   group by id
+$$;
+
+create or replace function app.list_access_levels() returns table (list_id uuid, level int)
+language sql stable security definer set search_path = '' as $$
+  select * from app.list_access_levels_for(auth.uid())
+$$;
+
+-- Server-side checks about *other* users (e.g. can the assignee see this list?).
+create or replace function app.user_list_level(u uuid, l uuid) returns int
+language sql stable security definer set search_path = '' as $$
+  select coalesce((select level from app.list_access_levels_for(u) where list_id = l), 0)
+$$;
+
+create or replace function app.user_can_access_task(u uuid, tid uuid) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.tasks t
+     where t.id = tid
+       and exists (select 1 from public.workspace_members wm
+                    where wm.workspace_id = t.workspace_id and wm.user_id = u and wm.deleted_at is null)
+       and (
+         (t.list_id is not null and app.user_list_level(u, t.list_id) > 0)
+         or (t.list_id is null and (
+               t.created_by = u or t.assignee_id = u
+               or exists (select 1 from public.tasks r where r.id = t.root_task_id and (r.created_by = u or r.assignee_id = u))))
+       )
+  )
+$$;
+
+create or replace function app.is_workspace_member(ws uuid, u uuid) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.workspace_members
+                  where workspace_id = ws and user_id = u and deleted_at is null)
 $$;
 
 create or replace function app.accessible_list_ids() returns setof uuid
@@ -453,6 +486,16 @@ create policy task_completions_update on public.task_completions for update to a
 -- documents (clients read via the collaboration server; search reads here)
 create policy documents_select on public.documents for select to authenticated
   using (list_id in (select app.accessible_list_ids()) or task_id in (select app.accessible_task_ids()));
+-- Users may create documents for things they can edit (e.g. when duplicating); ongoing writes
+-- come from the collaboration server after its own authorization check.
+create policy documents_insert on public.documents for insert to authenticated
+  with check (
+    workspace_id in (select app.my_workspace_ids())
+    and (
+      (list_id is not null and list_id in (select app.editable_list_ids()))
+      or (task_id is not null and task_id in (select app.editable_task_ids()))
+    )
+  );
 create policy document_snapshots_select on public.document_snapshots for select to authenticated
   using (document_id in (select id from public.documents));
 
@@ -506,11 +549,10 @@ create policy activity_select on public.activity_events for select to authentica
 create policy activity_insert on public.activity_events for insert to authenticated
   with check (actor_id = (select auth.uid()) and workspace_id in (select app.my_workspace_ids()));
 
--- notifications: own inbox; others may notify people they can see
+-- notifications: own inbox only. Other users' notifications are created via app.notify(),
+-- which checks the recipient can see what the notification points at.
 create policy notifications_select on public.notifications for select to authenticated
   using (user_id = (select auth.uid()));
-create policy notifications_insert on public.notifications for insert to authenticated
-  with check (actor_id = (select auth.uid()) and user_id in (select app.visible_user_ids()));
 create policy notifications_update on public.notifications for update to authenticated
   using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 
