@@ -62,7 +62,7 @@ export async function createTestDatabase(): Promise<TestDatabase> {
     try {
       await pg.exec(m.sql);
     } catch (error) {
-      throw new Error(`Migration ${m.name} failed: ${(error as Error).message}`);
+      throw new Error(`Migration ${m.name} failed: ${(error as Error).message}`, { cause: error });
     }
   }
   const server = new PGLiteSocketServer({ db: pg, port: 0, host: '127.0.0.1', maxConnections: 1 } as never);

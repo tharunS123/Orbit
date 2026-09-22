@@ -28,7 +28,8 @@ import {
   X,
 } from 'lucide-react';
 import type { Task } from '@orbit/shared';
-import { dueBucket, formatDueLabel } from '@orbit/core';
+import { dueBucket } from '@orbit/core';
+import { dueLabel } from '@/lib/format';
 import { isInInbox, subtaskProgress } from '@orbit/sync/client';
 import {
   Avatar,
@@ -83,7 +84,7 @@ export interface TaskRowProps {
 function DueChip({ task, timeZone }: { task: Task; timeZone: string }) {
   if (!task.dueDate) return null;
   const bucket = dueBucket(task, timeZone);
-  const label = formatDueLabel(task, timeZone, new Date(), { hour12: !/^(en-GB|de|fr|nl|sv)/.test(navigator.language) });
+  const label = dueLabel(task, timeZone);
   return (
     <span className={cn('inline-flex items-center gap-1 text-xs tabular-nums', bucket === 'overdue' ? 'font-medium text-danger' : bucket === 'today' ? 'font-medium text-accent' : 'text-fg-muted')}>
       <CalendarDays className="size-3.5" aria-hidden />

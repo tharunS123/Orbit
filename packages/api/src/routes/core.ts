@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import type { Hono } from 'hono';
 import { z } from 'zod';
 import { AppError, PRODUCT } from '@orbit/shared';
 import { PLANS, planLimits, type PlanId } from '@orbit/core';
@@ -6,7 +6,7 @@ import { asService, asUser } from '@orbit/database';
 import { pullRequestSchema, pushRequestSchema } from '@orbit/sync';
 import { handlePull, handlePush, handleReconcile } from '@orbit/sync/server';
 import type { ApiEnv } from '../context';
-import { body, rateLimit, requireAuth, query } from '../middleware';
+import { body, rateLimit, query } from '../middleware';
 
 /** Sync, bootstrap, activity, stats, sessions and devices. */
 export function coreRoutes(app: Hono<ApiEnv>, authed: Hono<ApiEnv>) {

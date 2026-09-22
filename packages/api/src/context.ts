@@ -1,4 +1,4 @@
-import type { Context } from 'hono';
+import type { Context, Hono } from 'hono';
 import type { AuthenticatedUser, TokenVerifier } from '@orbit/auth';
 import type { Sql } from '@orbit/database';
 import type { Flags } from '@orbit/shared';
@@ -14,7 +14,7 @@ export interface ApiExtensions {
    * Extra route modules (AI, meetings, integrations, billing, MCP tokens) mounted under /api.
    * `pub` routes are anonymous (webhooks, OAuth callbacks); `authed` routes require a session.
    */
-  routes?: ((pub: import('hono').Hono<ApiEnv>, authed: import('hono').Hono<ApiEnv>, deps: ApiDeps) => void)[];
+  routes?: ((pub: Hono<ApiEnv>, authed: Hono<ApiEnv>, deps: ApiDeps) => void)[];
 }
 
 export interface ApiDeps {

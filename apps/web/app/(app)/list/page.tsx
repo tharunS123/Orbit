@@ -107,7 +107,6 @@ function Cover({ path, onRemove, editable }: { path: string; onRemove: () => voi
   return (
     <div className="group/cover relative h-40 w-full overflow-hidden bg-surface-sunken sm:h-52">
       {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt="" className="size-full object-cover" />
       ) : null}
       {editable ? (

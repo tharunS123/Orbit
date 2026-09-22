@@ -21,7 +21,8 @@ import {
 } from 'lucide-react';
 import type { Task } from '@orbit/shared';
 import { routes } from '@orbit/shared';
-import { describeRecurrence, dueBucket, formatDueLabel } from '@orbit/core';
+import { describeRecurrence, dueBucket } from '@orbit/core';
+import { dueLabel } from '@/lib/format';
 import { isInInbox, listPath, selectChildren, taskPath } from '@orbit/sync/client';
 import {
   Avatar,
@@ -243,7 +244,7 @@ export function TaskDetail({ taskId, onClose, onOpenTask, mode = 'panel' }: { ta
             <PropertyRow icon={CalendarDays} label="Due">
               <DatePicker value={{ dueDate: task.dueDate, dueTime: task.dueTime }} onChange={(v) => cmd.setDue([task.id], v.dueDate, v.dueTime)}>
                 <button type="button" className={cn(valueButton, bucket === 'overdue' && 'text-danger', bucket === 'today' && 'text-accent', !task.dueDate && 'text-fg-subtle')}>
-                  {task.dueDate ? formatDueLabel(task, timeZone) : 'No date'}
+                  {task.dueDate ? dueLabel(task, timeZone) : 'No date'}
                 </button>
               </DatePicker>
             </PropertyRow>

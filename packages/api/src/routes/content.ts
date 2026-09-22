@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import type { Hono } from 'hono';
 import { z } from 'zod';
 import { strToU8, zipSync } from 'fflate';
 import { AppError, PRODUCT, uuidv7, type Task } from '@orbit/shared';
@@ -9,13 +9,15 @@ import { docFromState } from '@orbit/editor/ydoc';
 import { ydocToMarkdown } from '@orbit/editor/markdown';
 import type { ApiEnv } from '../context';
 import { clientIp } from '../context';
-import { body, rateLimit, requireAuth, query } from '../middleware';
+import { body, rateLimit, query } from '../middleware';
 
 /** Attachments, uploads, public links, exports and account lifecycle. */
 
 const ALLOWED_MIME = /^(image\/(png|jpe?g|gif|webp|heic|heif|avif|svg\+xml)|application\/pdf|text\/[\w.+-]+|audio\/[\w.+-]+|video\/[\w.+-]+|application\/(zip|x-zip-compressed|x-7z-compressed|x-tar|gzip|json|msword|rtf|vnd\.[\w.+-]+|octet-stream))$/;
 
 function safeName(name: string): string {
+  // Control characters are exactly what we want to strip from file names.
+  // eslint-disable-next-line no-control-regex
   return name.replace(/[\u0000-\u001f\\/:*?"<>|]+/g, '_').slice(0, 200) || 'file';
 }
 

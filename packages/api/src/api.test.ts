@@ -41,7 +41,7 @@ async function call(u: TestUser | null, method: string, path: string, payload?: 
   if (u) headers.authorization = `Bearer ${await tokenFor(u, opts.authAgo ?? 0)}`;
   const res = await app.request(`/api${path}`, { method, headers, body: payload === undefined ? undefined : JSON.stringify(payload) });
   const text = await res.text();
-  let json: unknown = null;
+  let json: unknown;
   try {
     json = JSON.parse(text);
   } catch {

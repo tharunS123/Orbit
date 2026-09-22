@@ -17,7 +17,6 @@ import {
   CommandItem,
   CommandList,
   Input,
-  LabelChip,
   Popover,
   PopoverContent,
   PopoverTrigger,

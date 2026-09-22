@@ -57,7 +57,7 @@ export async function apiFetch<T = unknown>(path: string, opts: ApiOptions = {})
     clearTimeout(timer);
   }
   if (!res.ok) {
-    let payload: unknown = null;
+    let payload: unknown;
     try {
       payload = await res.json();
     } catch {

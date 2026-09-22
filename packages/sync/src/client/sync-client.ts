@@ -3,7 +3,8 @@ import { parseMutatorArgs, type MutatorInput, type MutatorName } from '../mutato
 import type { ChangeSet, PendingMutation, PullRequest, PullResponse, PushRequest, PushResponse } from '../protocol';
 import type { LocalPersistence, PersistBatch, Row, SyncMeta } from './persistence';
 import { SCHEMA_VERSION } from './persistence';
-import { EntityStore, type MutationFailure } from './store';
+import type { EntityStore} from './store';
+import { type MutationFailure } from './store';
 
 /**
  * Orchestrates local-first sync:

@@ -43,7 +43,6 @@ export function FilePreview({ attachment, open, onOpenChange }: { attachment: At
           {loading || !url ? (
             <Spinner />
           ) : mime.startsWith('image/') ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt={attachment.name} className="max-h-[70vh] max-w-full rounded-md object-contain" />
           ) : mime === 'application/pdf' ? (
             <iframe src={url} title={attachment.name} className="h-[70vh] w-full rounded-md border-0" sandbox="allow-scripts allow-same-origin allow-downloads" />
@@ -97,7 +96,6 @@ function AttachmentRow({ attachment }: { attachment: Attachment }) {
     <li className="group/file flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-bg-hover">
       <button type="button" onClick={() => setPreview(true)} className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-md bg-surface-sunken" aria-label={`Preview ${attachment.name}`}>
         {url ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt="" className="size-full object-cover" />
         ) : (
           <Icon className="size-5 text-fg-muted" aria-hidden />

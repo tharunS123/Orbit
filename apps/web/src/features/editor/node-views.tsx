@@ -218,7 +218,6 @@ export function ImageView({ node, selected, updateAttributes }: ReactNodeViewPro
         <div className="rounded-lg bg-surface-sunken p-4 text-sm text-fg-subtle">Image unavailable offline or deleted.</div>
       ) : (
         <div className="group/img relative inline-block max-w-full" data-node-control>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={src} alt={(node.attrs.alt as string) ?? ''} className="max-w-full rounded-lg" style={width ? { width } : undefined} draggable={false} />
           <div className="absolute top-2 right-2 hidden gap-1 group-hover/img:flex">
             {[320, 560, null].map((w) => (

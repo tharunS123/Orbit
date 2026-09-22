@@ -1,8 +1,8 @@
-import { Hono } from 'hono';
+import type { Hono } from 'hono';
 import { z } from 'zod';
 import { asUser, type Tx } from '@orbit/database';
 import type { ApiEnv } from '../context';
-import { query, rateLimit, requireAuth } from '../middleware';
+import { query, rateLimit } from '../middleware';
 
 /**
  * Global search: Postgres full-text (simple config, prefix matching) combined with trigram
