@@ -4,14 +4,32 @@
     {
       "name": "web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@orbit/web", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@orbit/web",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "collab",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@orbit/collaboration-server", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@orbit/collaboration-server",
+        "dev"
+      ],
       "port": 4001
+    },
+    {
+      "name": "worker",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@orbit/worker",
+        "dev"
+      ],
+      "port": 4003
     }
   ]
 }

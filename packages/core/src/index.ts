@@ -6,3 +6,4 @@ export * from './plans';
 export * from './permissions';
 export * from './markdown';
 export * from './templates';
+export * from './reminders';

@@ -107,6 +107,21 @@ export const emailTemplates = {
       html: layout(p.headline, p.detail ? `<p>${escape(p.detail)}</p>` : '', { label: 'Open', url: p.url }),
     };
   },
+  digest(p: { items: { headline: string; detail?: string; url: string }[]; url: string }): Omit<EmailMessage, 'to'> {
+    const shown = p.items.slice(0, 10);
+    const more = p.items.length - shown.length;
+    return {
+      subject: `You have ${p.items.length} unread updates on ${PRODUCT.name}`,
+      text: `${shown.map((i) => `• ${i.headline}${i.detail ? ` — ${i.detail}` : ''}\n  ${i.url}`).join('\n')}${more > 0 ? `\n…and ${more} more` : ''}\n\nAll updates: ${p.url}`,
+      html: layout(
+        `You have ${p.items.length} unread updates`,
+        `<ul style="padding-left:18px;margin:0">${shown
+          .map((i) => `<li style="margin:6px 0"><a href="${escape(i.url)}" style="color:#1d1c1a">${escape(i.headline)}</a>${i.detail ? `<br><span style="color:#8a877f">${escape(i.detail)}</span>` : ''}</li>`)
+          .join('')}</ul>${more > 0 ? `<p>…and ${more} more.</p>` : ''}`,
+        { label: 'Open updates', url: p.url },
+      ),
+    };
+  },
   meetingReady(p: { title: string; url: string }): Omit<EmailMessage, 'to'> {
     return {
       subject: `Your meeting notes are ready: ${p.title}`,

@@ -78,7 +78,7 @@ async function notify(
                       ${j(ctx.tx, n.data ?? {})}, ${n.dedupeKey ?? null}) as created`;
   if (!res?.created) return;
   await ctx.enqueue('notification.deliver', { userId: n.userId, type: n.type, taskId: n.taskId ?? null, listId: n.listId ?? null }, {
-    singletonKey: n.dedupeKey ? `${n.userId}:${n.dedupeKey}` : undefined,
+    singletonKey: `push:${n.userId}`,
   });
 }
 
