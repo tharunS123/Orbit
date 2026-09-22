@@ -1,0 +1,23 @@
+{
+  "name": "@orbit/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@orbit/shared": "workspace:*",
+    "jose": "^6.2.12"
+  },
+  "devDependencies": {
+    "@orbit/config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "vitest": "^5.0.1"
+  }
+}

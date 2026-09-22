@@ -1,0 +1,27 @@
+{
+  "name": "@orbit/notifications",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@orbit/shared": "workspace:*",
+    "jose": "^6.2.12",
+    "nodemailer": "^10.0.10",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@orbit/config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "@types/nodemailer": "^8.0.2",
+    "@types/web-push": "^3.6.4",
+    "vitest": "^5.0.1"
+  }
+}

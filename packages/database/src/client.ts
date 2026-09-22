@@ -32,7 +32,8 @@ export function createDb(url: string, options: DbOptions = {}): Sql {
     prepare: options.prepare ?? !/pooler|:6543\b/.test(url),
     idle_timeout: 30,
     connect_timeout: 10,
-    connection: { TimeZone: 'UTC', application_name: 'orbit' },
+    // pg_trgm operators live in the `extensions` schema on Supabase.
+    connection: { TimeZone: 'UTC', application_name: 'orbit', search_path: '"$user", public, extensions' },
     transform: postgres.camel,
     onnotice: () => {},
     debug: options.debug ? (_conn, query) => console.debug(query) : undefined,

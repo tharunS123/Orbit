@@ -2,8 +2,11 @@
 -- messages, activity and notifications.
 
 -- ───────────────────────────── profiles ─────────────────────────────
+-- profiles.id equals auth.users.id (created by the signup trigger). There is intentionally no
+-- foreign key: when an account is deleted the auth user is removed and the profile is
+-- anonymised ("Deleted user"), so shared content in team workspaces keeps valid references.
 create table public.profiles (
-  id            uuid primary key references auth.users (id) on delete cascade,
+  id            uuid primary key,
   email         text,
   display_name  text not null default '' check (char_length(display_name) <= 120),
   avatar_path   text,
