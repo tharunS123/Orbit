@@ -44,8 +44,7 @@ browser against the local Supabase stack — not just compiled.
 - Seed: seeded Yjs documents decode with the editor schema and every task node resolves.
 
 ## In Progress
-- Phase 6 polish: shortcuts help overlay, desktop quick-capture window route, consistent 12/24h
-  time display.
+- Phase 6 polish: shortcuts help overlay, desktop quick-capture window route.
 
 ## Blocked Only By External Credentials
 - Push delivery to real devices: needs `VAPID_*` (web, generated locally), `APNS_*`, `FCM_*`.
@@ -55,7 +54,7 @@ browser against the local Supabase stack — not just compiled.
 - Phase 7 Talk / Make AI (`packages/ai`), Phase 8 Meetings, Phase 9 integrations (incl.
   `/api/calendar/events`), Phase 10 MCP server + token UI, Phase 11 billing (Stripe,
   RevenueCat), Phase 12 native shells (Tauri, Capacitor, widgets, share extensions), Phase 13
-  hardening; seed script, Playwright/Maestro E2E, CI workflows, remaining docs.
+  hardening; Playwright/Maestro E2E, CI workflows, remaining docs.
 
 ## Known Issues
 - Local machine lacks full Xcode, Android SDK and Rust: native builds cannot be compiled here.
