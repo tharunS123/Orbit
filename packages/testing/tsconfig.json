@@ -1,0 +1,4 @@
+{
+  "extends": "@orbit/config/tsconfig.node.json",
+  "include": ["src"]
+}

@@ -20,8 +20,7 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:migrate": "supabase migration up",
-    "db:seed": "pnpm --filter @orbit/database seed",
-    "db:types": "pnpm --filter @orbit/database gen:types",
+    "db:seed": "pnpm --filter @orbit/testing seed",
     "setup": "node scripts/setup.mjs"
   },
   "devDependencies": {
