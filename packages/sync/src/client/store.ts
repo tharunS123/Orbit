@@ -110,6 +110,24 @@ export class EntityStore {
     });
   }
 
+  /**
+   * Queue a mutation that another client of the same local outbox created (e.g. the desktop
+   * Quick Capture window). It is already durable, so it's queued even if it no longer applies
+   * locally — the server is the judge, exactly as for mutations replayed at startup.
+   */
+  adopt(mutation: PendingMutation): MutationFailure | null {
+    let failure: MutationFailure | null = null;
+    this.batch(() => {
+      try {
+        this.runMutation(mutation);
+      } catch (error) {
+        failure = { mutation, error: AppError.from(error) };
+      }
+      this.pending.push(mutation);
+    });
+    return failure;
+  }
+
   /** Load persisted state at startup. */
   hydrate(rows: Partial<Record<SyncTableName, Row[]>>, pending: PendingMutation[]): MutationFailure[] {
     let failures: MutationFailure[] = [];

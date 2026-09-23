@@ -71,6 +71,8 @@ export class SyncClient {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private interval: ReturnType<typeof setInterval> | null = null;
   private persistChain: Promise<void> = Promise.resolve();
+  /** Mutation ids the server has decided during this session (never re-adopt them). */
+  private decided = new Set<string>();
   readonly issues: SyncIssue[] = [];
 
   constructor(private readonly opts: SyncClientOptions) {
@@ -146,6 +148,45 @@ export class SyncClient {
     await this.persistChain;
   }
 
+  /**
+   * Re-read rows and outbox from local persistence. Used by satellite windows (desktop Quick
+   * Capture) that never pull themselves: the primary window keeps the shared cache current.
+   */
+  async reload(): Promise<void> {
+    await this.persistChain;
+    const state = await this.persistence.load();
+    if (state.meta && state.meta.userId !== this.opts.userId) return;
+    this.reportFailures(this.store.hydrate(state.rows, state.pending));
+    this.setStatus({ hydrated: true, pending: this.store.pendingMutations().length, lastSyncedAt: state.meta?.lastPullAt ?? null });
+  }
+
+  /**
+   * Adopt mutations that another window of this app wrote to the shared outbox. They show up
+   * optimistically here at once (offline too) and this client pushes them; mutation ids make the
+   * push idempotent, so a mutation pushed by two clients is still applied exactly once.
+   */
+  async adoptPending(): Promise<number> {
+    await this.persistChain;
+    let stored: PendingMutation[];
+    try {
+      stored = await this.persistence.loadPending();
+    } catch (error) {
+      this.log('outbox unreadable; nothing adopted', error);
+      return 0;
+    }
+    const known = new Set(this.store.pendingMutations().map((m) => m.id));
+    const fresh = stored.filter((m) => !known.has(m.id) && !this.decided.has(m.id));
+    for (const m of fresh) {
+      const failure = this.store.adopt(m);
+      if (failure) this.reportFailures([failure]);
+    }
+    if (fresh.length) {
+      this.setStatus({ pending: this.store.pendingMutations().length });
+      this.schedule(0);
+    }
+    return fresh.length;
+  }
+
   // ───────────── mutations ─────────────
 
   /**
@@ -201,6 +242,8 @@ export class SyncClient {
       const acked = await this.push();
       await this.pull();
       if (acked.length) {
+        for (const id of acked) this.decided.add(id);
+        if (this.decided.size > 10_000) this.decided = new Set([...this.decided].slice(-5_000));
         this.reportFailures(this.store.acknowledge(acked));
         this.persist({ pendingRemove: acked });
       }
