@@ -1,6 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import { detectKeyboardOS } from '@orbit/shared';
+
+export { SHORTCUTS } from './shortcuts';
 
 /**
  * Keyboard shortcuts. Keys like "mod+k", "shift+alt+n", "?" and two-key sequences like "g i".
@@ -15,7 +18,7 @@ export interface HotkeyOptions {
   preventDefault?: boolean;
 }
 
-const isMac = () => typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+const isMac = () => typeof navigator !== 'undefined' && detectKeyboardOS() === 'mac';
 
 export function isTypingTarget(el: EventTarget | null): boolean {
   if (!(el instanceof HTMLElement)) return false;
@@ -51,8 +54,10 @@ function matches(combo: string, e: KeyboardEvent): boolean {
     backspace: ['backspace'],
     delete: ['delete'],
     slash: ['/'],
+    backslash: ['\\'],
+    tab: ['tab'],
   };
-  const keyOk = named[key] ? named[key]!.includes(eventKey) : eventKey === key || code === `key${key}` || code === `digit${key}`;
+  const keyOk = named[key] ? named[key]!.includes(eventKey) || code === key : eventKey === key || code === `key${key}` || code === `digit${key}`;
   if (!keyOk) return false;
   // Shift is implied for symbols like "?" — only enforce when explicitly requested for letters.
   if (want.shift !== e.shiftKey && /^[a-z0-9]$|^(enter|up|down|left|right|space|backspace|delete)$/.test(key)) return false;
@@ -105,35 +110,3 @@ export function useHotkeys(bindings: Record<string, HotkeyHandler>, deps: React.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, allowInInputs, preventDefault, ...deps]);
 }
-
-/** Canonical shortcut map — shown in menus, tooltips and the shortcuts reference screen. */
-export const SHORTCUTS = {
-  palette: 'mod+k',
-  newTask: 'n',
-  quickCapture: 'q',
-  newList: 'mod+shift+l',
-  search: '/',
-  inbox: 'g i',
-  today: 'g t',
-  upcoming: 'g u',
-  meetings: 'g m',
-  updates: 'g n',
-  settings: 'g s',
-  talk: 'mod+shift+t',
-  complete: 'mod+enter',
-  open: 'enter',
-  edit: 'e',
-  schedule: 'd',
-  scheduleToday: 't',
-  label: 'l',
-  assign: 'a',
-  duplicate: 'mod+d',
-  delete: 'backspace',
-  moveUp: 'alt+up',
-  moveDown: 'alt+down',
-  selectAll: 'mod+a',
-  undo: 'mod+z',
-  redo: 'mod+shift+z',
-  help: '?',
-  toggleSidebar: 'mod+backslash',
-} as const;

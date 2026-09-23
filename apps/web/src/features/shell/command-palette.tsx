@@ -14,6 +14,7 @@ import {
   LayoutList,
   Mic,
   Moon,
+  Zap,
   MessageSquare,
   Paperclip,
   Plus,
@@ -25,14 +26,16 @@ import {
   Users,
   Video,
 } from 'lucide-react';
-import { routes } from '@orbit/shared';
+import { acceleratorText, routes } from '@orbit/shared';
 import { searchLocal } from '@orbit/sync/client';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, Spinner } from '@orbit/ui';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, Kbd, Spinner, useKeyboardOS } from '@orbit/ui';
 import { apiFetch } from '@/lib/api';
-import { SHORTCUTS } from '@/lib/hotkeys';
+import { isDesktop, useQuickCaptureConfig } from '@/lib/desktop';
+import { AVAILABLE_FEATURES, SHORTCUTS } from '@/lib/shortcuts';
 import { useSync } from '@/lib/sync';
 import { useWorkspace } from '@/lib/workspace';
 import type { SearchResultDto } from '@/features/search/types';
+import { useAppCommands } from './app-commands';
 
 const TYPE_ICON = { task: CheckCircle2, list: FileText, note: FileText, comment: MessageSquare, meeting: Video, transcript: Video, file: Paperclip, person: UserRound, label: Tag } as const;
 
@@ -59,8 +62,12 @@ export function resultHref(r: SearchResultDto): string {
   }
 }
 
-export function CommandPalette({ open, onOpenChange, onNewTask, onNewList, onTalk, onRecordMeeting }: { open: boolean; onOpenChange: (o: boolean) => void; onNewTask: () => void; onNewList: () => void; onTalk: () => void; onRecordMeeting: () => void }) {
+export function CommandPalette({ open, onOpenChange, onRecordMeeting }: { open: boolean; onOpenChange: (o: boolean) => void; onRecordMeeting: () => void }) {
   const router = useRouter();
+  const commands = useAppCommands();
+  const os = useKeyboardOS();
+  const [captureConfig] = useQuickCaptureConfig();
+  const globalCapture = isDesktop() && captureConfig?.enabled ? acceleratorText(captureConfig.shortcut, os) : null;
   const { store, client } = useSync();
   const { workspaces, setWorkspace, current } = useWorkspace();
   const [q, setQ] = React.useState('');
@@ -136,7 +143,7 @@ export function CommandPalette({ open, onOpenChange, onNewTask, onNewList, onTal
                     <CommandItem value="search-all" onSelect={() => go(routes.search(q.trim()))}>
                       <Search /> Search all for “{q.trim()}”
                     </CommandItem>
-                    <CommandItem value="create-task" onSelect={act(onNewTask)}>
+                    <CommandItem value="create-task" onSelect={act(commands.newTask)}>
                       <Plus /> Create a task
                     </CommandItem>
                   </CommandGroup>
@@ -144,18 +151,30 @@ export function CommandPalette({ open, onOpenChange, onNewTask, onNewList, onTal
               ) : (
                 <>
                   <CommandGroup heading="Create">
-                    <CommandItem value="new-task" onSelect={act(onNewTask)} shortcut={SHORTCUTS.newTask}>
+                    <CommandItem value="new-task" onSelect={act(commands.newTask)} shortcut={SHORTCUTS.newTask}>
                       <Plus /> New task
                     </CommandItem>
-                    <CommandItem value="new-list" onSelect={act(onNewList)} shortcut={SHORTCUTS.newList}>
+                    <CommandItem value="new-list" onSelect={act(commands.newList)} shortcut={SHORTCUTS.newList}>
                       <FileText /> New list
                     </CommandItem>
-                    <CommandItem value="talk" onSelect={act(onTalk)} shortcut={SHORTCUTS.talk}>
-                      <Mic /> Talk — add tasks by voice
+                    <CommandItem value="quick-capture" onSelect={act(commands.quickCapture)} shortcut={globalCapture ? undefined : SHORTCUTS.quickCapture}>
+                      <Zap /> Quick capture
+                      {globalCapture ? (
+                        <span className="ml-auto" title="Global shortcut — works from any app">
+                          <Kbd className="px-1.5">{globalCapture}</Kbd>
+                        </span>
+                      ) : null}
                     </CommandItem>
-                    <CommandItem value="record" onSelect={act(onRecordMeeting)}>
-                      <Video /> Record meeting notes
-                    </CommandItem>
+                    {AVAILABLE_FEATURES.talk ? (
+                      <CommandItem value="talk" onSelect={act(commands.talk)} shortcut={SHORTCUTS.talk}>
+                        <Mic /> Talk — add tasks by voice
+                      </CommandItem>
+                    ) : null}
+                    {AVAILABLE_FEATURES.meetings ? (
+                      <CommandItem value="record" onSelect={act(onRecordMeeting)}>
+                        <Video /> Record meeting notes
+                      </CommandItem>
+                    ) : null}
                   </CommandGroup>
                   <CommandGroup heading="Go to">
                     <CommandItem value="inbox" onSelect={() => go(routes.inbox())} shortcut={SHORTCUTS.inbox}>
@@ -167,19 +186,23 @@ export function CommandPalette({ open, onOpenChange, onNewTask, onNewList, onTal
                     <CommandItem value="upcoming" onSelect={() => go(routes.upcoming())} shortcut={SHORTCUTS.upcoming}>
                       <CalendarRange /> Upcoming
                     </CommandItem>
-                    <CommandItem value="meetings" onSelect={() => go(routes.meetings())} shortcut={SHORTCUTS.meetings}>
-                      <Video /> Meetings
-                    </CommandItem>
+                    {AVAILABLE_FEATURES.meetings ? (
+                      <CommandItem value="meetings" onSelect={() => go(routes.meetings())} shortcut={SHORTCUTS.meetings}>
+                        <Video /> Meetings
+                      </CommandItem>
+                    ) : null}
                     <CommandItem value="updates" onSelect={() => go(routes.updates())} shortcut={SHORTCUTS.updates}>
                       <Bell /> Updates
                     </CommandItem>
-                    <CommandItem value="lists" onSelect={() => go(routes.lists())}>
+                    <CommandItem value="lists" onSelect={() => go(routes.lists())} shortcut={SHORTCUTS.lists}>
                       <LayoutList /> All lists
                     </CommandItem>
                     <CommandItem value="settings" onSelect={() => go(routes.settings())} shortcut={SHORTCUTS.settings}>
                       <Settings /> Settings
                     </CommandItem>
-                    <CommandItem value="shortcuts" onSelect={() => go(routes.shortcuts())} shortcut={SHORTCUTS.help}>
+                  </CommandGroup>
+                  <CommandGroup heading="Help">
+                    <CommandItem value="shortcuts" onSelect={act(() => commands.openShortcuts())} shortcut={SHORTCUTS.help}>
                       <Keyboard /> Keyboard shortcuts
                     </CommandItem>
                   </CommandGroup>

@@ -9,9 +9,9 @@ import { cn } from '@orbit/ui';
 
 /**
  * One-handed bottom navigation for phones. The centre button creates a task; long-pressing it
- * starts Talk (voice capture).
+ * starts Talk (voice capture) once Talk is available.
  */
-export function MobileNav({ onCreate, onTalk }: { onCreate: () => void; onTalk: () => void }) {
+export function MobileNav({ onCreate, onTalk }: { onCreate: () => void; onTalk?: () => void }) {
   const pathname = usePathname();
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressed = React.useRef(false);
@@ -40,10 +40,11 @@ export function MobileNav({ onCreate, onTalk }: { onCreate: () => void; onTalk: 
             <button
               key="create"
               type="button"
-              aria-label="New task (hold for Talk)"
+              aria-label={onTalk ? 'New task (hold for Talk)' : 'New task'}
               className="-mt-6 grid size-14 place-items-center rounded-full bg-accent text-accent-fg shadow-md active:scale-95"
               onPointerDown={() => {
                 longPressed.current = false;
+                if (!onTalk) return;
                 timer.current = setTimeout(() => {
                   longPressed.current = true;
                   navigator.vibrate?.(15);

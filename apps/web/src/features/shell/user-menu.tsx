@@ -9,13 +9,15 @@ import { useSession } from '@/lib/session';
 import { useSignedImage } from '@/lib/images';
 import { useSync } from '@/lib/sync';
 import { useWorkspace } from '@/lib/workspace';
-import { SHORTCUTS } from '@/lib/hotkeys';
+import { SHORTCUTS } from '@/lib/shortcuts';
+import { useAppCommands } from './app-commands';
 
 export function UserMenu({ compact }: { compact?: boolean }) {
   const router = useRouter();
   const { signOut, email } = useSession();
   const { client } = useSync();
   const { profile } = useWorkspace();
+  const commands = useAppCommands();
   const avatar = useSignedImage(profile?.avatarPath);
   const setTheme = (theme: 'system' | 'light' | 'dark') => client.mutate('profile.update', { settings: { theme } });
   const out = async (scope: 'local' | 'global') => {
@@ -56,7 +58,7 @@ export function UserMenu({ compact }: { compact?: boolean }) {
             </MenuItem>
           </MenuSubContent>
         </MenuSub>
-        <MenuItem onSelect={() => router.push(routes.shortcuts())} shortcut={SHORTCUTS.help}>
+        <MenuItem onSelect={() => commands.openShortcuts()} shortcut={SHORTCUTS.help}>
           <Keyboard /> Keyboard shortcuts
         </MenuItem>
         <MenuSeparator />

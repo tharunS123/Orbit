@@ -3,8 +3,9 @@
 import * as React from 'react';
 import { ArrowRightLeft, CalendarDays, CheckCircle2, CopyPlus, Inbox, Tag, Trash2, UserRound, X } from 'lucide-react';
 import type { Task } from '@orbit/shared';
-import { Button, Tooltip } from '@orbit/ui';
-import { SHORTCUTS, useHotkeys } from '@/lib/hotkeys';
+import { Button, Tooltip, useKeyboardOS } from '@orbit/ui';
+import { useHotkeys } from '@/lib/hotkeys';
+import { SHORTCUTS, bindingsFor, type ShortcutId } from '@/lib/shortcuts';
 import { useSync } from '@/lib/sync';
 import { useUndo } from '@/lib/undo';
 import { useTaskCommands } from './commands';
@@ -42,33 +43,29 @@ export function TaskKeyboard({ order, onOpen, siblingsOf }: { order: string[]; o
     run(null, () => actions.reorder(sibs, [task.id], to), { toast: false });
   };
 
-  useHotkeys(
-    {
-      down: () => selection.move(1),
-      j: () => selection.move(1),
-      up: () => selection.move(-1),
-      k: () => selection.move(-1),
-      'shift+down': () => selection.move(1, true),
-      'shift+up': () => selection.move(-1, true),
-      [SHORTCUTS.selectAll]: () => selection.selectAll(),
-      escape: () => selection.clear(),
-      [SHORTCUTS.open]: () => selection.focused && onOpen(selection.focused),
-      [SHORTCUTS.complete]: withTargets((ids) => cmd.toggle(ids)),
-      x: withTargets((ids) => ids.forEach((id) => selection.toggle(id))),
-      [SHORTCUTS.edit]: () => selection.focused && dispatchRowCommand(selection.focused, 'edit'),
-      [SHORTCUTS.schedule]: () => selection.focused && dispatchRowCommand(selection.focused, 'date'),
-      [SHORTCUTS.scheduleToday]: withTargets((ids) => cmd.schedule(ids, 'today')),
-      [SHORTCUTS.label]: () => selection.focused && dispatchRowCommand(selection.focused, 'labels'),
-      [SHORTCUTS.assign]: () => selection.focused && dispatchRowCommand(selection.focused, 'assign'),
-      m: () => selection.focused && dispatchRowCommand(selection.focused, 'move'),
-      [SHORTCUTS.duplicate]: withTargets((ids) => cmd.duplicate(ids)),
-      [SHORTCUTS.delete]: withTargets((ids) => (cmd.remove(ids), selection.clear())),
-      delete: withTargets((ids) => (cmd.remove(ids), selection.clear())),
-      [SHORTCUTS.moveUp]: moveBy(-1),
-      [SHORTCUTS.moveDown]: moveBy(1),
-    },
-    [selection, cmd, key],
-  );
+  const os = useKeyboardOS();
+  const handlers: Partial<Record<ShortcutId, () => void>> = {
+    focusNext: () => selection.move(1),
+    focusPrev: () => selection.move(-1),
+    extendDown: () => selection.move(1, true),
+    extendUp: () => selection.move(-1, true),
+    selectAll: () => selection.selectAll(),
+    clearSelection: () => selection.clear(),
+    open: () => selection.focused && onOpen(selection.focused),
+    complete: withTargets((ids) => cmd.toggle(ids)),
+    toggleSelect: withTargets((ids) => ids.forEach((id) => selection.toggle(id))),
+    edit: () => selection.focused && dispatchRowCommand(selection.focused, 'edit'),
+    schedule: () => selection.focused && dispatchRowCommand(selection.focused, 'date'),
+    scheduleToday: withTargets((ids) => cmd.schedule(ids, 'today')),
+    label: () => selection.focused && dispatchRowCommand(selection.focused, 'labels'),
+    assign: () => selection.focused && dispatchRowCommand(selection.focused, 'assign'),
+    move: () => selection.focused && dispatchRowCommand(selection.focused, 'move'),
+    duplicate: withTargets((ids) => cmd.duplicate(ids)),
+    delete: withTargets((ids) => (cmd.remove(ids), selection.clear())),
+    moveUp: moveBy(-1),
+    moveDown: moveBy(1),
+  };
+  useHotkeys(bindingsFor('tasks', handlers, os), [selection, cmd, key, os]);
   return null;
 }
 
@@ -124,7 +121,7 @@ export function BulkActionBar() {
           <Trash2 />
         </Button>
       </Tooltip>
-      <Tooltip content="Clear selection" shortcut="escape">
+      <Tooltip content="Clear selection" shortcut={SHORTCUTS.clearSelection}>
         <Button variant="ghost" size="icon" aria-label="Clear selection" onClick={() => selection.clear()}>
           <X />
         </Button>

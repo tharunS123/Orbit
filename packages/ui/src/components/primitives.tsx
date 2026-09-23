@@ -4,6 +4,7 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from 'radix-ui';
 import { Loader2 } from 'lucide-react';
+import { describeCombo, detectKeyboardOS, formatCombo, type KeyboardOS } from '@orbit/shared';
 import { cn } from '../cn';
 
 // ───────────── Button ─────────────
@@ -96,14 +97,32 @@ export function Kbd({ className, children }: { className?: string; children: Rea
   return <kbd className={cn('inline-flex h-5 min-w-5 items-center justify-center rounded-xs border border-border bg-surface-sunken px-1 font-sans text-[11px] font-medium text-fg-muted', className)}>{children}</kbd>;
 }
 
-/** Render a shortcut like "mod+shift+k" as keycaps, using ⌘ on Apple platforms. */
+/** Keyboard convention of the current device (⌘ on Apple platforms, Ctrl elsewhere). */
+export function useKeyboardOS(): KeyboardOS {
+  return React.useSyncExternalStore(
+    noopSubscribe,
+    () => detectKeyboardOS(),
+    () => 'mac',
+  );
+}
+const noopSubscribe = () => () => undefined;
+
+/**
+ * Render an in-app shortcut like "mod+shift+k" (or a sequence like "g i") as keycaps, using the
+ * platform's labels. Screen readers get a spoken form ("Command Shift K").
+ */
 export function Shortcut({ keys, className }: { keys: string; className?: string }) {
-  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
-  const map: Record<string, string> = { mod: isMac ? '⌘' : 'Ctrl', shift: '⇧', alt: isMac ? '⌥' : 'Alt', enter: '↵', escape: 'Esc', backspace: '⌫', up: '↑', down: '↓', left: '←', right: '→', space: 'Space' };
+  const os = useKeyboardOS();
+  const stepsOf = formatCombo(keys, os);
   return (
-    <span className={cn('inline-flex items-center gap-0.5', className)} aria-label={keys.replace(/\+/g, ' ')}>
-      {keys.split('+').map((k) => (
-        <Kbd key={k}>{map[k.toLowerCase()] ?? k.toUpperCase()}</Kbd>
+    <span className={cn('inline-flex items-center gap-0.5', className)} role="img" aria-label={describeCombo(keys, os)}>
+      {stepsOf.map((step, i) => (
+        <React.Fragment key={i}>
+          {i > 0 ? <span className="px-0.5 text-[11px] text-fg-subtle" aria-hidden>then</span> : null}
+          {step.map((k, j) => (
+            <Kbd key={`${k}-${j}`}>{k}</Kbd>
+          ))}
+        </React.Fragment>
       ))}
     </span>
   );

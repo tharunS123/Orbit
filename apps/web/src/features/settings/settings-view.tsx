@@ -2,11 +2,12 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Bell, Bot, Brush, CreditCard, Database, Keyboard, Plug, Settings, Terminal, UserRound, Users } from 'lucide-react';
+import { Bell, Bot, Brush, CreditCard, Database, Keyboard, Monitor, Plug, Settings, Terminal, UserRound, Users } from 'lucide-react';
 import { routes, type SettingsSection } from '@orbit/shared';
 import { cn } from '@orbit/ui';
 import { PageBody, PageHeader } from '@/features/shell/page-header';
 import { AccountSettings } from './account';
+import { DesktopSettings } from './desktop';
 import { AppearanceSettings, DataSettings, NotificationSettings, ShortcutSettings, WorkspaceSettings } from './sections';
 import { extraSettings } from './registry';
 
@@ -21,6 +22,7 @@ const NAV: { id: SettingsSection; label: string; icon: React.ComponentType<{ cla
   { id: 'billing', label: 'Plan & billing', icon: CreditCard },
   { id: 'data', label: 'Data', icon: Database },
   { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
+  { id: 'desktop', label: 'Desktop app', icon: Monitor },
 ];
 
 const CORE: Partial<Record<SettingsSection, React.ComponentType>> = {
@@ -30,6 +32,7 @@ const CORE: Partial<Record<SettingsSection, React.ComponentType>> = {
   workspace: WorkspaceSettings,
   data: DataSettings,
   shortcuts: ShortcutSettings,
+  desktop: DesktopSettings,
 };
 
 export function SettingsView({ section }: { section: string }) {

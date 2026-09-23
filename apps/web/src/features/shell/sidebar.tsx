@@ -201,7 +201,7 @@ function SectionBlock({ block, sections, activeListId }: { block: SidebarSection
   );
 }
 
-export function Sidebar({ onCollapse, onNewTask, onTalk }: { onCollapse: () => void; onNewTask: () => void; onTalk: () => void }) {
+export function Sidebar({ onCollapse, onNewTask, onTalk }: { onCollapse: () => void; onNewTask: () => void; onTalk?: () => void }) {
   const pathname = usePathname();
   const params = useSearchParams();
   const router = useRouter();
@@ -323,11 +323,13 @@ export function Sidebar({ onCollapse, onNewTask, onTalk }: { onCollapse: () => v
           <Button variant="primary" size="sm" className="flex-1" onClick={onNewTask}>
             <Plus /> New task
           </Button>
-          <Tooltip content="Talk — add tasks by voice" shortcut={SHORTCUTS.talk}>
-            <Button variant="secondary" size="sm" onClick={onTalk} aria-label="Talk">
-              <Mic />
-            </Button>
-          </Tooltip>
+          {onTalk ? (
+            <Tooltip content="Talk — add tasks by voice" shortcut={SHORTCUTS.talk}>
+              <Button variant="secondary" size="sm" onClick={onTalk} aria-label="Talk">
+                <Mic />
+              </Button>
+            </Tooltip>
+          ) : null}
         </div>
         <div className="flex items-center justify-between gap-1">
           <UserMenu />
