@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "turbo run dev --filter=@orbit/web --filter=@orbit/collaboration-server --filter=@orbit/worker --filter=@orbit/mcp-server",
     "dev:web": "turbo run dev --filter=@orbit/web",
+    "dev:desktop": "pnpm --filter @orbit/desktop dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

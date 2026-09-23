@@ -16,6 +16,8 @@ import {
 } from '@orbit/sync/client';
 import { toast } from '@orbit/ui';
 import { apiFetch } from './api';
+import { isDesktop } from './desktop';
+import { onOutboxChanged } from './outbox-channel';
 import { deviceId } from './platform';
 
 /**
@@ -56,7 +58,16 @@ export function detectTimeZone(): string {
   }
 }
 
-export function SyncProvider({ userId, onUnauthorized, children, fallback }: { userId: string; onUnauthorized: () => void; children: React.ReactNode; fallback: React.ReactNode }) {
+/**
+ * `primary` (default): the window that owns syncing — pushes, pulls, persists the cache.
+ * `satellite`: a secondary window (desktop Quick Capture) that reads the shared local cache and
+ * writes to the shared outbox, but never talks to the server itself; the primary adopts its
+ * mutations (see `SyncClient.adoptPending`). One writer of the row cache avoids two windows
+ * interleaving pulls into the same database.
+ */
+export type SyncMode = 'primary' | 'satellite';
+
+export function SyncProvider({ userId, onUnauthorized, children, fallback, mode = 'primary' }: { userId: string; onUnauthorized: () => void; children: React.ReactNode; fallback: React.ReactNode; mode?: SyncMode }) {
   const [value, setValue] = React.useState<SyncContextValue | null>(null);
   const unauthorized = React.useRef(onUnauthorized);
   unauthorized.current = onUnauthorized;
@@ -80,28 +91,45 @@ export function SyncProvider({ userId, onUnauthorized, children, fallback }: { u
       },
     });
     const actions = new Actions(client, { userId, timeZone });
-    void client.hydrate().then(() => {
+    const satellite = mode === 'satellite';
+    void client.hydrate().then(async () => {
       if (disposed) return;
+      // Pick up anything a Quick Capture window queued while this window was closed.
+      if (!satellite) await client.adoptPending();
       setValue({ store, client, actions, userId, timeZone });
-      client.start();
+      if (!satellite) client.start();
     });
 
-    const poke = () => client.poke();
-    const onVisible = () => document.visibilityState === 'visible' && client.poke();
     const onUnload = () => void client.flush();
-    window.addEventListener('online', poke);
-    window.addEventListener('focus', poke);
-    document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('pagehide', onUnload);
+    if (satellite) {
+      return () => {
+        disposed = true;
+        window.removeEventListener('pagehide', onUnload);
+      };
+    }
+
+    const adopt = () => void client.adoptPending();
+    const poke = () => client.poke();
+    const onFocus = () => {
+      if (isDesktop()) adopt();
+      poke();
+    };
+    const onVisible = () => document.visibilityState === 'visible' && onFocus();
+    const offOutbox = onOutboxChanged(userId, adopt);
+    window.addEventListener('online', poke);
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       disposed = true;
       client.stop();
+      offOutbox();
       window.removeEventListener('online', poke);
-      window.removeEventListener('focus', poke);
+      window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('pagehide', onUnload);
     };
-  }, [userId]);
+  }, [userId, mode]);
 
   if (!value) return <>{fallback}</>;
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

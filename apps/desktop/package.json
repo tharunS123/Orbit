@@ -1,0 +1,16 @@
+{
+  "name": "@orbit/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build:app": "tauri build",
+    "icons": "tauri icon src-tauri/icons/icon-source.png",
+    "test": "node scripts/cargo.mjs test",
+    "typecheck": "node scripts/cargo.mjs check"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
