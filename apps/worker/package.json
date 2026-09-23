@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
     "start": "node dist/index.js",
-    "build": "tsup src/index.ts --format esm --platform node --target node22 --out-dir dist --clean --no-splitting --noExternal @orbit/",
+    "build": "tsup",
     "lint": "eslint src",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
