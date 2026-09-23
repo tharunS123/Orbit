@@ -40,7 +40,7 @@ decisions. Deeper detail lives in `SYNC_ENGINE.md`, `DATABASE.md`, `SECURITY.md`
 | Path | Purpose |
 | --- | --- |
 | `apps/web` | Next.js 16 app: marketing/auth pages, the whole app UI, API route mount, PWA service worker |
-| `apps/desktop` | Tauri 2 shell: global quick-capture shortcut, tray, notifications, deep links |
+| `apps/desktop` | Tauri 2 shell: global Quick Capture shortcut + floating window, tray, single instance |
 | `apps/mobile` | Capacitor 8 shell: iOS/Android projects, widgets, share extension, push |
 | `apps/collaboration-server` | Hocuspocus Yjs server with Postgres persistence, auth, change "pokes" |
 | `apps/worker` | pg-boss worker: reminders, recurrence, AI jobs, meeting pipeline, integrations, email |
@@ -123,6 +123,29 @@ confirms, mutators apply.
 ### 8. Entitlements are server-side
 Plan limits (`packages/core/src/plans.ts`) are enforced in mutators and API handlers using the
 server-reconciled `entitlements` table. Frontend only mirrors them for UX.
+
+### 9. Keyboard shortcuts: one registry
+`apps/web/src/lib/shortcuts.ts` is the only place a shortcut is defined (id, label, category,
+scope, keys, platform overrides, feature gate). Hotkey bindings (`bindingsFor(scope, handlers)`
+in AppShell and TaskKeyboard), menus, tooltips, the command palette, Settings → Shortcuts and the
+shortcuts overlay all read it. Key notation, OS detection, platform labels (⌘ vs Ctrl) and
+global-accelerator validation live in `packages/shared/src/keyboard.ts` (pure, tested).
+App-level actions (new task/list, quick capture, shortcuts overlay, palette, sidebar) are exposed
+once through `useAppCommands()` so no caller re-implements them.
+
+### 10. Desktop Quick Capture = a satellite window on the shared outbox
+The Tauri shell (`apps/desktop/src-tauri`) registers a configurable global shortcut
+(default ⇧⌥Space on macOS, Ctrl+Alt+Space on Windows/Linux; `quick-capture.json` in the app
+config dir) and owns exactly one hidden-until-needed `quick-capture` window that loads `/capture`.
+That page runs `SyncProvider mode="satellite"`: it hydrates from the same IndexedDB as the main
+window, parses with the same `Actions.preview/createTask`, and appends mutations to the shared
+outbox — but never pushes or pulls, so only one window writes the row cache. After saving it
+flushes and announces (`BroadcastChannel` + a Tauri `orbit://outbox-changed` event); the main
+window's `SyncClient.adoptPending()` re-reads the durable outbox and applies what it doesn't
+have, so the task appears immediately (offline too) and is pushed by the primary. Mutation ids
+make pushes idempotent, so even a double push applies once. Closing windows hides them; the app
+keeps running (tray) so the shortcut keeps working; a second launch focuses the first
+(single-instance). Registration refusals from the OS are reported in Settings, never silent.
 
 ## Identifiers, time and ordering
 * UUID v7 for all ids (sortable, generated client-side for offline creates).
