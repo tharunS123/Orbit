@@ -12,7 +12,7 @@ import { useTaskPanel } from '@/lib/nav';
 import { useNow, useStoreQuery, useSync } from '@/lib/sync';
 import { useUndo } from '@/lib/undo';
 import { useWorkspace } from '@/lib/workspace';
-import { SHORTCUTS } from '@/lib/hotkeys';
+import { AVAILABLE_FEATURES, SHORTCUTS } from '@/lib/shortcuts';
 
 type Sort = 'manual' | 'due' | 'newest';
 
@@ -40,11 +40,13 @@ function InboxView() {
         actions={
           <>
             <Segmented ariaLabel="Sort" value={sort} onValueChange={setSort} options={[{ value: 'manual', label: 'Manual' }, { value: 'due', label: 'Due' }, { value: 'newest', label: 'Newest' }]} className="max-sm:hidden" />
-            <Tooltip content="Talk" shortcut={SHORTCUTS.talk}>
-              <Button variant="ghost" size="icon" aria-label="Add tasks by voice" onClick={() => window.dispatchEvent(new CustomEvent('orbit:talk-open'))}>
-                <Mic />
-              </Button>
-            </Tooltip>
+            {AVAILABLE_FEATURES.talk ? (
+              <Tooltip content="Talk" shortcut={SHORTCUTS.talk}>
+                <Button variant="ghost" size="icon" aria-label="Add tasks by voice" onClick={() => window.dispatchEvent(new CustomEvent('orbit:talk-open'))}>
+                  <Mic />
+                </Button>
+              </Tooltip>
+            ) : null}
           </>
         }
       />

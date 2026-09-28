@@ -34,7 +34,8 @@ export type SettingsSection =
   | 'billing'
   | 'workspace'
   | 'data'
-  | 'shortcuts';
+  | 'shortcuts'
+  | 'desktop';
 
 /** Short share paths (web redirects; native apps claim these via universal/app links). */
 export const shareLinks = {

@@ -7,10 +7,10 @@ import { Bell, Download, RotateCcw, Trash2, Upload } from 'lucide-react';
 import { AppError, describeError, routes, type LabelColor } from '@orbit/shared';
 import { canChangeRole, canRemoveMember, canWorkspace } from '@orbit/core';
 import { selectLabels, selectMembers, selectTrash } from '@orbit/sync/client';
-import { Avatar, Button, ColorDot, ConfirmDialog, Field, Input, LabelChip, Popover, PopoverContent, PopoverTrigger, Segmented, Select, Shortcut, Switch, Textarea, toast } from '@orbit/ui';
+import { Avatar, Button, ColorDot, ConfirmDialog, Field, Input, LabelChip, Popover, PopoverContent, PopoverTrigger, Segmented, Select, Switch, Textarea, toast } from '@orbit/ui';
 import { LabelColorPicker } from '@/features/tasks/pickers';
 import { apiFetch, downloadFromApi } from '@/lib/api';
-import { SHORTCUTS } from '@/lib/hotkeys';
+import { ShortcutReference } from '@/features/shortcuts/shortcut-reference';
 import { useMe } from '@/lib/collab';
 import { enableWebPush, pushSupported } from '@/lib/push';
 import { useNow, useStoreQuery, useSync } from '@/lib/sync';
@@ -391,28 +391,10 @@ export function DataSettings() {
   );
 }
 
-const SHORTCUT_GROUPS: { title: string; items: [string, string][] }[] = [
-  { title: 'General', items: [['Command palette', SHORTCUTS.palette], ['Search', SHORTCUTS.search], ['New task', SHORTCUTS.newTask], ['New list', SHORTCUTS.newList], ['Talk (voice)', SHORTCUTS.talk], ['Undo', SHORTCUTS.undo], ['Redo', SHORTCUTS.redo], ['Toggle sidebar', SHORTCUTS.toggleSidebar], ['Shortcuts', SHORTCUTS.help]] },
-  { title: 'Navigate', items: [['Inbox', SHORTCUTS.inbox], ['Today', SHORTCUTS.today], ['Upcoming', SHORTCUTS.upcoming], ['Meetings', SHORTCUTS.meetings], ['Updates', SHORTCUTS.updates], ['Settings', SHORTCUTS.settings]] },
-  { title: 'Tasks', items: [['Move focus', 'up'], ['Extend selection', 'shift+down'], ['Select all', SHORTCUTS.selectAll], ['Toggle selected', 'x'], ['Open', SHORTCUTS.open], ['Complete', SHORTCUTS.complete], ['Rename', SHORTCUTS.edit], ['Schedule', SHORTCUTS.schedule], ['Schedule for today', SHORTCUTS.scheduleToday], ['Labels', SHORTCUTS.label], ['Assign', SHORTCUTS.assign], ['Move to list', 'm'], ['Move up / down', SHORTCUTS.moveUp], ['Duplicate', SHORTCUTS.duplicate], ['Delete', SHORTCUTS.delete], ['Clear selection', 'escape']] },
-  { title: 'Documents', items: [['Block menu', '/'], ['New task line', '[ ]'], ['Turn line into task', 'mod+shift+9'], ['Heading', '#'], ['Bulleted list', '-'], ['Numbered list', '1.'], ['Quote', '>'], ['Divider', '---'], ['Next task (in a task)', 'enter'], ['Make subtask', 'tab']] },
-];
-
 export function ShortcutSettings() {
   return (
-    <div className="grid gap-5 sm:grid-cols-2">
-      {SHORTCUT_GROUPS.map((g) => (
-        <SettingsSection key={g.title} title={g.title}>
-          <dl className="flex flex-col gap-2">
-            {g.items.map(([label, keys]) => (
-              <div key={label} className="flex items-center justify-between gap-2 text-sm">
-                <dt className="text-fg-muted">{label}</dt>
-                <dd>{/^[\w+]+$/.test(keys) || keys.includes('+') || keys.includes(' ') ? <Shortcut keys={keys.replace(' ', '+')} /> : <code className="rounded-xs bg-bg-hover px-1.5 text-xs">{keys}</code>}</dd>
-              </div>
-            ))}
-          </dl>
-        </SettingsSection>
-      ))}
-    </div>
+    <SettingsSection title="Keyboard shortcuts" description="Every shortcut in Orbit. Press ? anywhere to open this list as an overlay.">
+      <ShortcutReference />
+    </SettingsSection>
   );
 }

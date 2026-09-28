@@ -3,6 +3,8 @@ import { uuidv7, type Task } from '@orbit/shared';
 import { positionBetween } from '@orbit/core';
 import { asService, asUser, type Sql } from '@orbit/database';
 import { createTestDatabase, createTestUser, type TestDatabase, type TestUser } from '@orbit/database/testing';
+import { Actions } from './client/actions';
+import { isInInbox } from './client/selectors';
 import { MemoryPersistence } from './client/persistence';
 import { handlePull, runMutation } from './server';
 import { createDevice } from './test-helpers';
@@ -232,6 +234,65 @@ describe('sync client end-to-end', () => {
     await laptop.client.sync();
     expect(laptop.store.get('tasks', milk)).toMatchObject({ title: 'Oat milk', dueDate: '2026-09-25' });
     expect(laptop.store.get('tasks', eggs)?.title).toBe('Eggs');
+  });
+
+  it('a satellite window (desktop Quick Capture) shares the outbox: offline captures appear in the main window and sync once', async () => {
+    // Both windows use the same local database (IndexedDB on desktop).
+    const shared = new MemoryPersistence();
+    const main = await createDevice(sql, alice.id, shared);
+    await main.client.sync();
+    await main.client.flush();
+    // The satellite hydrates from the shared cache and never starts its own sync loop.
+    const capture = await createDevice(sql, alice.id, shared);
+    expect(capture.store.get('workspaces', alice.personalWorkspaceId)).toBeTruthy();
+    const now = () => new Date('2026-09-22T15:00:00Z');
+    const captureActions = new Actions(capture.client, { userId: alice.id, timeZone: 'UTC', now });
+
+    main.transport.online = false;
+    const { id } = captureActions.createTask({ workspaceId: alice.personalWorkspaceId, text: 'Submit CS project tomorrow at 7pm #school', inInbox: true });
+    await capture.client.flush();
+    expect(capture.transport.pushes).toBe(0);
+
+    // The main window adopts it immediately — no network involved.
+    expect(await main.client.adoptPending()).toBe(2); // label.create + task.create
+    expect(main.store.get('tasks', id)).toMatchObject({ title: 'Submit CS project', dueDate: '2026-09-23', dueTime: '19:00', listId: null });
+    expect(isInInbox(main.store, main.store.get('tasks', id)!, alice.id)).toBe(true);
+    const labelId = main.store.get('tasks', id)!.labelIds[0]!;
+    expect(main.store.get('labels', labelId)?.name).toBe('school');
+    expect(await main.client.adoptPending()).toBe(0);
+
+    await main.client.sync();
+    expect(main.client.getStatus().state).toBe('offline');
+    expect(main.store.pendingMutations()).toHaveLength(2);
+
+    main.transport.online = true;
+    await main.client.sync();
+    await main.client.flush();
+    expect(main.store.pendingMutations()).toHaveLength(0);
+    expect(await shared.loadPending()).toHaveLength(0);
+    expect(await main.client.adoptPending()).toBe(0);
+    const rows = await asUser(sql, { userId: alice.id }, (tx) => tx<{ n: number }[]>`select count(*)::int as n from tasks where id = ${id}`);
+    expect(rows[0]!.n).toBe(1);
+    expect(await task(alice, id)).toMatchObject({ title: 'Submit CS project', listId: null });
+
+    // Online capture pushed by both windows (a race) is still applied once.
+    const second = captureActions.createTask({ workspaceId: alice.personalWorkspaceId, text: 'Buy groceries tomorrow', inInbox: true });
+    await capture.client.flush();
+    await main.client.adoptPending();
+    capture.client.start();
+    await Promise.all([capture.client.sync(), main.client.sync()]);
+    capture.client.stop();
+    await main.client.sync();
+    const again = await asUser(sql, { userId: alice.id }, (tx) => tx<{ n: number }[]>`select count(*)::int as n from tasks where id = ${second.id}`);
+    expect(again[0]!.n).toBe(1);
+    expect(main.issues).toEqual([]);
+    expect(capture.issues).toEqual([]);
+    expect(main.store.get('tasks', second.id)).toMatchObject({ title: 'Buy groceries', dueDate: '2026-09-23', dueTime: null });
+
+    // The satellite refreshes from the cache the main window keeps current.
+    await main.client.flush();
+    await capture.client.reload();
+    expect(capture.store.get('tasks', id)?.title).toBe('Submit CS project');
   });
 
   it('is idempotent when a push is retried', async () => {

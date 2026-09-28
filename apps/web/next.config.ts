@@ -22,7 +22,7 @@ const csp = [
   "img-src 'self' data: blob: https:" + (process.env.NODE_ENV === 'development' ? ' http://127.0.0.1:54321 http://localhost:54321' : ''),
   "media-src 'self' blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https: wss: ws: http://127.0.0.1:* http://localhost:*",
+  "connect-src 'self' https: wss: ws: http://127.0.0.1:* http://localhost:* ipc: http://ipc.localhost",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -38,6 +38,8 @@ const config: NextConfig = {
   transpilePackages: ['@orbit/ui', '@orbit/shared', '@orbit/core', '@orbit/sync', '@orbit/editor'],
   serverExternalPackages: ['postgres', 'pg-boss', 'pino', 'web-push', 'nodemailer', 'yjs'],
   poweredByHeader: false,
+  // The dev badge defaults to bottom-left, on top of the sidebar's account menu.
+  devIndicators: { position: 'bottom-right' },
   // The root .env is loaded above, after Next snapshots public variables — forward them so they
   // are inlined into the client bundle.
   env: {

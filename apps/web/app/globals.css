@@ -16,6 +16,14 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Desktop Quick Capture: the document is a frameless panel sized to its content. */
+html[data-window='quick-capture'],
+html[data-window='quick-capture'] body {
+  height: auto;
+  overflow: hidden;
+  background: var(--surface);
+}
+
 /* ───────────── Editor ───────────── */
 .orbit-prose {
   font-size: 15px;

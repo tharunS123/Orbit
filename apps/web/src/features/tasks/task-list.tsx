@@ -235,7 +235,7 @@ export function QuickAddRow({
           }}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="min-w-0 flex-1 bg-transparent text-[14.5px] outline-none placeholder:text-fg-subtle sm:text-sm"
+          className="min-w-0 flex-1 bg-transparent text-[14.5px] text-ellipsis outline-none placeholder:text-fg-subtle sm:text-sm"
         />
         {text ? (
           <span className="hidden items-center gap-1 text-xs text-fg-subtle sm:flex">

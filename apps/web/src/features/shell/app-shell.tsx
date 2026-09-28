@@ -4,10 +4,12 @@ import * as React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PanelLeftOpen, WifiOff } from 'lucide-react';
 import { routes } from '@orbit/shared';
-import { Button, Dialog, DialogContent, SheetContent, Spinner, Tooltip, cn } from '@orbit/ui';
+import { Button, Dialog, DialogContent, SheetContent, Spinner, Tooltip, cn, useKeyboardOS } from '@orbit/ui';
 import { Dialog as D } from 'radix-ui';
 import { CollabProvider } from '@/lib/collab';
-import { SHORTCUTS, isTypingTarget, useHotkeys } from '@/lib/hotkeys';
+import { DESKTOP_EVENTS, desktop as desktopShell, isDesktop, useDesktopEvent } from '@/lib/desktop';
+import { isTypingTarget, useHotkeys } from '@/lib/hotkeys';
+import { AVAILABLE_FEATURES, SHORTCUTS, bindingsFor, type ShortcutId } from '@/lib/shortcuts';
 import { useTaskPanel } from '@/lib/nav';
 import { useStoreQuery, useSync, useSyncStatus } from '@/lib/sync';
 import { useUndo } from '@/lib/undo';
@@ -15,7 +17,9 @@ import { useWorkspace } from '@/lib/workspace';
 import { UploadsProvider } from '@/features/files/uploads';
 import { QuickCaptureForm } from '@/features/tasks/quick-capture';
 import { TaskDetail } from '@/features/tasks/task-detail';
+import { ShortcutsDialog } from '@/features/shortcuts/shortcut-reference';
 import { LogoMark } from '@/components/brand';
+import { AppCommandsProvider, useFocusReturn, type AppCommands } from './app-commands';
 import { CommandPalette } from './command-palette';
 import { MobileNav } from './mobile-nav';
 import { Sidebar } from './sidebar';
@@ -78,11 +82,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [paletteOpen, setPaletteOpen] = React.useState(false);
   const [captureOpen, setCaptureOpen] = React.useState(false);
   const [mobileSidebar, setMobileSidebar] = React.useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
+  const shortcutsReturn = React.useRef<HTMLElement | null>(null);
+  const focusReturn = useFocusReturn();
+  const os = useKeyboardOS();
   const gate = useFirstSyncGate();
 
   React.useEffect(() => {
     if (gate.profile && !gate.profile.onboardedAt && pathname !== '/onboarding') router.replace('/onboarding');
   }, [gate.profile, pathname, router]);
+
+  // PWA shortcut / deep link "/inbox?capture=1" opens New task once.
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('capture') !== '1') return;
+    setCaptureOpen(true);
+    params.delete('capture');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [pathname, router]);
 
   React.useEffect(() => {
     const open = () => setPaletteOpen(true);
@@ -107,31 +125,64 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const startTalk = React.useCallback(() => window.dispatchEvent(new CustomEvent('orbit:talk-open')), []);
   const recordMeeting = React.useCallback(() => router.push(`${routes.meetings()}?record=1`), [router]);
 
-  useHotkeys(
-    {
-      [SHORTCUTS.palette]: () => setPaletteOpen((o) => !o),
-      [SHORTCUTS.search]: () => setPaletteOpen(true),
-      [SHORTCUTS.newTask]: () => setCaptureOpen(true),
-      [SHORTCUTS.quickCapture]: () => setCaptureOpen(true),
-      [SHORTCUTS.newList]: newList,
-      [SHORTCUTS.talk]: startTalk,
-      [SHORTCUTS.inbox]: () => router.push(routes.inbox()),
-      [SHORTCUTS.today]: () => router.push(routes.today()),
-      [SHORTCUTS.upcoming]: () => router.push(routes.upcoming()),
-      [SHORTCUTS.meetings]: () => router.push(routes.meetings()),
-      [SHORTCUTS.updates]: () => router.push(routes.updates()),
-      [SHORTCUTS.settings]: () => router.push(routes.settings()),
-      [SHORTCUTS.help]: () => router.push(routes.shortcuts()),
-      [SHORTCUTS.toggleSidebar]: () => setPrefs({ collapsed: !prefs.collapsed }),
-      [SHORTCUTS.undo]: (e) => !isTypingTarget(e.target) && undo.undo(),
-      [SHORTCUTS.redo]: (e) => !isTypingTarget(e.target) && undo.redo(),
-    },
-    [prefs.collapsed, newList, startTalk],
-    { preventDefault: false },
+  const commands = React.useMemo<AppCommands>(
+    () => ({
+      openPalette: () => setPaletteOpen(true),
+      newTask: () => setCaptureOpen(true),
+      newList,
+      // The floating window exists only in the desktop app; the browser uses the in-app dialog.
+      quickCapture: () => {
+        if (isDesktop()) void desktopShell.showQuickCapture().catch(() => setCaptureOpen(true));
+        else setCaptureOpen(true);
+      },
+      openShortcuts: (from) => {
+        shortcutsReturn.current = focusReturn(from);
+        // Let a closing menu/palette release focus and pointer locks before the dialog mounts.
+        setTimeout(() => setShortcutsOpen(true), 0);
+      },
+      toggleSidebar: () => {
+        if (desktop) setPrefs({ collapsed: !prefs.collapsed });
+        else setMobileSidebar((o) => !o);
+      },
+      talk: startTalk,
+    }),
+    [newList, focusReturn, desktop, prefs.collapsed, setPrefs, startTalk],
   );
 
-  // Escape closes the task panel when nothing else handles it.
-  useHotkeys({ escape: () => panel.taskId && panel.close() }, [panel.taskId], { preventDefault: false });
+  // One registry drives the bindings (see lib/shortcuts.ts); only the handlers live here.
+  // Shortcuts that open something with a text field swallow their key, so "n" doesn't land in
+  // the New task input (the listener runs with preventDefault off for undo/redo in editors).
+  const opening = (fn: () => void) => (e: KeyboardEvent) => {
+    e.preventDefault();
+    fn();
+  };
+  const handlers: Partial<Record<ShortcutId, (e: KeyboardEvent) => void>> = {
+    palette: opening(() => setPaletteOpen((o) => !o)),
+    search: opening(() => setPaletteOpen(true)),
+    newTask: opening(commands.newTask),
+    quickCapture: opening(() => setCaptureOpen(true)),
+    newList: opening(newList),
+    talk: startTalk,
+    inbox: () => router.push(routes.inbox()),
+    today: () => router.push(routes.today()),
+    upcoming: () => router.push(routes.upcoming()),
+    lists: () => router.push(routes.lists()),
+    meetings: () => router.push(routes.meetings()),
+    updates: () => router.push(routes.updates()),
+    settings: () => router.push(routes.settings()),
+    help: opening(() => (shortcutsOpen ? setShortcutsOpen(false) : commands.openShortcuts())),
+    toggleSidebar: commands.toggleSidebar,
+    undo: (e) => !isTypingTarget(e.target) && undo.undo(),
+    redo: (e) => !isTypingTarget(e.target) && undo.redo(),
+    // Escape closes the task panel when nothing else (dialog, menu, editor) handled it.
+    close: () => panel.taskId && panel.close(),
+  };
+  useHotkeys(bindingsFor('app', handlers, os), [prefs.collapsed, newList, startTalk, commands, shortcutsOpen, panel.taskId, os], { preventDefault: false });
+
+  // Desktop shell asks the main window to navigate (e.g. "Open Orbit" from Quick Capture).
+  useDesktopEvent<string | null>(DESKTOP_EVENTS.navigate, (path) => {
+    if (path && path.startsWith('/') && !path.startsWith('//')) router.push(path);
+  });
 
   if (pathname === '/onboarding') return <CollabProvider><UploadsProvider>{children}</UploadsProvider></CollabProvider>;
 
@@ -156,11 +207,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const sidebar = <Sidebar onCollapse={() => (desktop ? setPrefs({ collapsed: true }) : setMobileSidebar(false))} onNewTask={() => setCaptureOpen(true)} onTalk={startTalk} />;
+  const sidebar = <Sidebar onCollapse={() => (desktop ? setPrefs({ collapsed: true }) : setMobileSidebar(false))} onNewTask={() => setCaptureOpen(true)} onTalk={AVAILABLE_FEATURES.talk ? startTalk : undefined} />;
 
   return (
     <CollabProvider>
       <UploadsProvider>
+       <AppCommandsProvider value={commands}>
         <div className="flex h-dvh overflow-hidden bg-bg">
           {desktop && !prefs.collapsed ? (
             <aside className="relative hidden shrink-0 border-r border-border md:block" style={{ width: prefs.width }}>
@@ -221,7 +273,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         {!desktop ? (
           <>
-            <MobileNav onCreate={() => setCaptureOpen(true)} onTalk={startTalk} />
+            <MobileNav onCreate={() => setCaptureOpen(true)} onTalk={AVAILABLE_FEATURES.talk ? startTalk : undefined} />
             <D.Root open={Boolean(panel.taskId)} onOpenChange={(o) => !o && panel.close()}>
               <SheetContent title="Task details" side="bottom" className="h-[92dvh]">
                 {panel.taskId ? <TaskDetail key={panel.taskId} taskId={panel.taskId} onClose={panel.close} onOpenTask={panel.open} /> : null}
@@ -229,12 +281,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </D.Root>
           </>
         ) : null}
-        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onNewTask={() => setCaptureOpen(true)} onNewList={newList} onTalk={startTalk} onRecordMeeting={recordMeeting} />
+        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onRecordMeeting={recordMeeting} />
+        <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} returnFocus={shortcutsReturn} />
         <Dialog open={captureOpen} onOpenChange={setCaptureOpen}>
           <DialogContent title="New task" size="md">
             <QuickCaptureForm defaultListId={pathname === '/list' ? new URLSearchParams(window.location.search).get('id') : null} onDone={() => setCaptureOpen(false)} />
           </DialogContent>
         </Dialog>
+       </AppCommandsProvider>
       </UploadsProvider>
     </CollabProvider>
   );

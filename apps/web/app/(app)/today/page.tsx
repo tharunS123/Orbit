@@ -14,7 +14,7 @@ import { useTaskPanel } from '@/lib/nav';
 import { useNow, useStoreQuery, useSync } from '@/lib/sync';
 import { useUndo } from '@/lib/undo';
 import { useWorkspace } from '@/lib/workspace';
-import { SHORTCUTS } from '@/lib/hotkeys';
+import { AVAILABLE_FEATURES, SHORTCUTS } from '@/lib/shortcuts';
 
 function TodayView() {
   const { userId, timeZone, actions } = useSync();
@@ -40,11 +40,13 @@ function TodayView() {
         icon={<Sun />}
         subtitle={`${formatCivilLong(today)}${profile?.displayName ? ` · ${greeting}, ${profile.displayName.split(' ')[0]}` : ''}`}
         actions={
-          <Tooltip content="Talk" shortcut={SHORTCUTS.talk}>
-            <Button variant="ghost" size="icon" aria-label="Add tasks by voice" onClick={() => window.dispatchEvent(new CustomEvent('orbit:talk-open'))}>
-              <Mic />
-            </Button>
-          </Tooltip>
+          AVAILABLE_FEATURES.talk ? (
+            <Tooltip content="Talk" shortcut={SHORTCUTS.talk}>
+              <Button variant="ghost" size="icon" aria-label="Add tasks by voice" onClick={() => window.dispatchEvent(new CustomEvent('orbit:talk-open'))}>
+                <Mic />
+              </Button>
+            </Tooltip>
+          ) : null
         }
       />
       <PageBody>
